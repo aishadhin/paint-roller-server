@@ -20,6 +20,7 @@ async function run() {
   try {
     await client.connect();
     const productCollection = client.db("ai_roller").collection("products");
+    const reviewCollection = client.db("ai_roller").collection("reviews");
 
     // get data from db to a server as api
     app.get("/product", async (req, res) => {
@@ -27,6 +28,26 @@ async function run() {
       const cursor = productCollection.find(query);
       const products = await cursor.toArray();
       res.send(products);
+    });
+
+
+    app.post("/reviews", async (req, res) => {
+      const newReview = req.body;
+      const result = await reviewCollection.insertOne(newReview);
+      const exists = await reviewCollection.findOne(newReview);
+      if(exists){
+        return res.send({success: false})
+      }
+      res.send(result);
+    });
+
+
+
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
     });
 
 
