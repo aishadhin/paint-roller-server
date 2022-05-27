@@ -1,5 +1,6 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb"); // Mongo
 const express = require("express");
+const jwt = require('jsonwebtoken');
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
@@ -21,6 +22,8 @@ async function run() {
     await client.connect();
     const productCollection = client.db("ai_roller").collection("products");
     const reviewCollection = client.db("ai_roller").collection("reviews");
+    const orderCollection = client.db("ai_roller").collection("orders");
+    const usersCollection = client.db("ai_roller").collection("users");
 
     // get data from db to a server as api
     app.get("/product", async (req, res) => {
@@ -31,13 +34,23 @@ async function run() {
     });
 
 
+    app.post("/allorders", async (req, res) => {
+      const newOrder = req.body;
+      const result = await orderCollection.insertOne(newOrder);
+      res.send(result);
+    });
+
+    app.get("/allorders", async (req, res) => {
+      const user = req.query.userEmail;
+      const query = {user:user}
+      const orders = await orderCollection.find(query).toArray();
+      res.send(orders);
+    });
+
+
     app.post("/reviews", async (req, res) => {
       const newReview = req.body;
       const result = await reviewCollection.insertOne(newReview);
-      const exists = await reviewCollection.findOne(newReview);
-      if(exists){
-        return res.send({success: false})
-      }
       res.send(result);
     });
 
@@ -58,6 +71,20 @@ async function run() {
       const product = await productCollection.findOne(query);
       res.send(product);
     });
+
+
+    app.put('/user/:email', async (req, res)=>{
+      const email = req.params.email;
+      const user = req.body;
+      const filter = {email:email};
+      const options = {upsert: true};
+      const updateDoc ={
+        $set: user,
+      }
+      const result = await usersCollection.updateOne(filter,updateDoc, options);
+      const token = jwt.sign({email:email}, process.env.ACCESS_TOKEN_SECRET,{ expiresIn: '1h' })
+      res.send({result, token});
+    })
 
 
 
