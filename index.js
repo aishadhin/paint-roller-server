@@ -17,6 +17,14 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+function verifyJwt(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader){
+    return res.status(401).send({message: 'Unauthorized access'})
+  }
+  next();
+}
+
 async function run() {
   try {
     await client.connect();
@@ -40,7 +48,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/allorders", async (req, res) => {
+    app.get("/allorders",verifyJwt, async (req, res) => {
       const user = req.query.userEmail;
       const query = {user:user}
       const orders = await orderCollection.find(query).toArray();
