@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 7000;
 
 app.use(cors());
 app.use(express.json());
@@ -109,6 +109,12 @@ async function run() {
       );
       res.send(result);
     });
+    app.delete("/cart-delete/:id", (req, res) => {
+      const id = ObjectId(req.params.id);
+      console.log(id);
+      const result = orderCollection.deleteOne({ _id: id });
+      res.send(result);
+    });
   } finally {
   }
 }
@@ -119,5 +125,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`Example app listening on port http://localhost:${port}`);
 });
